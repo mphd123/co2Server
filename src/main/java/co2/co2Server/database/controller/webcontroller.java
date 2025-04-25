@@ -11,16 +11,28 @@ import java.util.NoSuchElementException;
 @RestController
 public class webcontroller {
 
+    private SensorDataDB db;
+
+    public webcontroller(SensorDataDB db) {
+        this.db = db;
+    }
+
+
     @GetMapping("/co2all")
-    public List<Co2Entry> getCo2Entries() throws Exception {
-        try (SensorDataDB db = new SensorDataDB()) {
-            return db.getEntries();
+    public String getCo2Entries() throws Exception {
+        try {
+            List<Co2Entry> list = db.getEntries();
+            if (list.isEmpty()) return "empty list";
+            return list.toString();
+        }
+        catch (Exception e){
+            return "got an expetion for getting all the co2 entries error code is = " + e;
         }
     }
 
     @GetMapping("/co2")
     public String getlatestCo2() throws Exception {
-        try (SensorDataDB db = new SensorDataDB()) {
+        try  {
             return db.getEntries().getLast().toString();
         }
         catch (NoSuchElementException e){
@@ -30,8 +42,6 @@ public class webcontroller {
 
     @GetMapping("/")
     public String main2() throws Exception {
-        try (SensorDataDB db = new SensorDataDB()) {
             return "test";
-        }
     }
 }

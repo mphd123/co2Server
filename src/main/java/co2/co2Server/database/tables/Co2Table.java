@@ -34,8 +34,8 @@ public class Co2Table {
             """.formatted(TABLE_NAME, Entry_ID);
 
     public static final String SELECT = """
-            SELECT %s, %s, %s, %s FROM %s
-            """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, TABLE_NAME);
+    SELECT %s, %s, %s, %s, %s FROM %s
+    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, Date, TABLE_NAME);
 
     public static final String UPDATE_TEMPLATE = """
             UPDATE %s SET %s = ? WHERE %s = ?

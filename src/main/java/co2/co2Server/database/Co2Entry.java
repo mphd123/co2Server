@@ -1,6 +1,6 @@
 package co2.co2Server.database;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class Co2Entry {
     private int entryId, co2, temperature;

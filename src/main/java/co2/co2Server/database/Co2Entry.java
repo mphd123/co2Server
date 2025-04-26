@@ -7,6 +7,17 @@ public class Co2Entry {
     private String sensorName;
     private Date date;
 
+    @Override
+    public String toString() {
+        return "Co2Entry{" +
+                "entryId=" + entryId +
+                ", co2=" + co2 +
+                ", temperature=" + temperature +
+                ", sensorName='" + sensorName + '\'' +
+                ", date=" + date +
+                '}';
+    }
+
     public Co2Entry(int entryId, int co2, int temperatur, String sensorName, Date date) {
         this.entryId = entryId;
         this.co2  = co2;

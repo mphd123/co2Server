@@ -16,7 +16,7 @@ def send_sensor_data():
         "co2": sensor_data.get("co2", 0),
         "temperature": sensor_data.get("temperature", 0),
         "sensorName": "sensor_01",
-        "date": datetime.datetime.now().strftime("%Y-%m-%d")
+        "date": datetime.datetime.now().isoformat()
     }
 
     try:

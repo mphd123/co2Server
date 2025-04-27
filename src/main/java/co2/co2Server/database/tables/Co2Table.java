@@ -7,7 +7,7 @@ public class Co2Table {
     public static final String CO2VALUE = "co2Value";
     public static final String Temperature = "temperature";
     public static final String SensorName = "sensorName";
-    public static final String Date = "date";
+    public static final String DATE_TIME = "dateTime";
 
     public static final String CREATE_TABLE = """
             CREATE TABLE IF NOT EXISTS %s (
@@ -15,9 +15,9 @@ public class Co2Table {
                 %s integer NOT NULL,
                 %s integer,
                 %s text,
-                %s date
+                %s datetime
             )
-            """.formatted(TABLE_NAME, Entry_ID, CO2VALUE, Temperature, SensorName, Date);
+            """.formatted(TABLE_NAME, Entry_ID, CO2VALUE, Temperature, SensorName, DATE_TIME);
 
 
     public static final int INSERT_CO2Value_INDEX = 1;
@@ -26,7 +26,7 @@ public class Co2Table {
     public static final int INSERT_Date_INDEX = 4;
     public static final String INSERT = """
             INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?)
-            """.formatted(TABLE_NAME, CO2VALUE, Temperature, SensorName, Date);
+            """.formatted(TABLE_NAME, CO2VALUE, Temperature, SensorName, DATE_TIME);
 
     public static final int DELETE_Entry_ID_INDEX = 1;
     public static final String DELETE = """
@@ -35,7 +35,7 @@ public class Co2Table {
 
     public static final String SELECT = """
     SELECT %s, %s, %s, %s, %s FROM %s
-    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, Date, TABLE_NAME);
+    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, DATE_TIME, TABLE_NAME);
 
     public static final String UPDATE_TEMPLATE = """
             UPDATE %s SET %s = ? WHERE %s = ?

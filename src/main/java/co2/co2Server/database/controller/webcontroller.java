@@ -2,6 +2,10 @@ package co2.co2Server.database.controller;
 
 import co2.co2Server.database.Co2Entry;
 import co2.co2Server.database.SensorDataDB;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.data.time.Second;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -58,21 +63,23 @@ public class webcontroller {
     public ResponseEntity<byte[]> getImage() throws Exception {
         List<Co2Entry> entries = db.getEntries();
 
-        XYSeries series = new XYSeries("CO₂ Measurements");
+        TimeSeries series = new TimeSeries("CO₂ Measurements");
 
-        for (int i = 0; i < entries.size(); i++) {
-            series.add(i, entries.get(i).getCo2());
+        for (Co2Entry entry : entries) {
+            series.addOrUpdate(new Second(entry.getDate()), entry.getCo2());
         }
 
-        XYSeriesCollection dataset = new XYSeriesCollection(series);
+        TimeSeriesCollection dataset = new TimeSeriesCollection(series);
 
-
-        JFreeChart chart = ChartFactory.createXYLineChart(
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 "CO₂ Measurements Over Time",
-                "Measurement Index (Hourly)",
+                "Timestamp",
                 "CO₂ (ppm)",
                 dataset
         );
+
+        DateAxis axis = (DateAxis) chart.getXYPlot().getDomainAxis();
+        axis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd HH:mm"));
 
         byte[] imageBytes;
         try (var baos = new java.io.ByteArrayOutputStream()) {

@@ -83,7 +83,7 @@ public class webcontroller {
 
         byte[] imageBytes;
         try (var baos = new java.io.ByteArrayOutputStream()) {
-            ChartUtils.writeChartAsPNG(baos, chart, 800, 600);
+            ChartUtils.writeChartAsPNG(baos, chart, 4096, 3000);
             imageBytes = baos.toByteArray();
         }
 

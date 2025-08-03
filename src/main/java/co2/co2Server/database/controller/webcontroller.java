@@ -2,6 +2,7 @@ package co2.co2Server.database.controller;
 
 import co2.co2Server.database.Co2Entry;
 import co2.co2Server.database.SensorDataDB;
+
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
@@ -28,6 +29,7 @@ import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
@@ -51,7 +53,7 @@ public class webcontroller {
             return "got an exception for getting all the co2 entries error code is = " + e;
         }
     }
-
+/*
     @GetMapping("/co2")
     public String getlatestCo2() throws Exception {
         try  {
@@ -61,20 +63,18 @@ public class webcontroller {
             return "there is no co2 element error code is = " + e;
         }
     }
-
+*/
     @GetMapping("/co2")
-    public String addFoo(@RequestParam(name = "count") int count)  { 
-        
+    public String getNLast(@RequestParam(name = "count", defaultValue = "1") int count) {
         try {
             List<Co2Entry> list = db.getEntries();
-            Collections.sort(list,(Co2Entry obj1, Co2Entry obj2) -> obj1.getDate().compareTo(obj2.getDate()));
-            return list.subList(Math.max(list.size()-count,0), list.size()).toString();
-        
-            } catch (Exception e) {
-            return "an error occured while processing the request with count = "+ count;
+            Collections.sort(list, (Co2Entry obj1, Co2Entry obj2) -> obj1.getDate().compareTo(obj2.getDate()));
+            return list.subList(Math.max(list.size() - count, 0), list.size()).toString();
+        } catch (Exception e) {
+            return "An error occurred while processing the request with count = " + count;
         }
-}
-
+    }
+    
     @GetMapping("/image")
     public ResponseEntity<byte[]> getImage() throws Exception {
         List<Co2Entry> entries = db.getEntries();

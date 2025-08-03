@@ -11,12 +11,15 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -58,6 +61,19 @@ public class webcontroller {
             return "there is no co2 element error code is = " + e;
         }
     }
+
+    @GetMapping("/co2")
+    public String addFoo(@RequestParam(name = "count") int count)  { 
+        
+        try {
+            List<Co2Entry> list = db.getEntries();
+            Collections.sort(list,(Co2Entry obj1, Co2Entry obj2) -> obj1.getDate().compareTo(obj2.getDate()));
+            return list.subList(Math.max(list.size()-count,0), list.size()).toString();
+        
+            } catch (Exception e) {
+            return "an error occured while processing the request with count = "+ count;
+        }
+}
 
     @GetMapping("/image")
     public ResponseEntity<byte[]> getImage() throws Exception {

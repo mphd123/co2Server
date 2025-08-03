@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+service PlotService {
+  rpc GeneratePlot (PlotRequest) returns (PlotResponse);
+}
+
+message PlotRequest {
+  repeated double x = 1;
+  repeated int64 y = 2;
+}
+
+message PlotResponse {
+  bytes image = 1;
+}

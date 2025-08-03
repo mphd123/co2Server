@@ -53,17 +53,7 @@ public class webcontroller {
             return "got an exception for getting all the co2 entries error code is = " + e;
         }
     }
-/*
-    @GetMapping("/co2")
-    public String getlatestCo2() throws Exception {
-        try  {
-            return db.getEntries().getLast().toString();
-        }
-        catch (NoSuchElementException e){
-            return "there is no co2 element error code is = " + e;
-        }
-    }
-*/
+
     @GetMapping("/co2")
     public String getNLast(@RequestParam(name = "count", defaultValue = "1") int count) {
         try {

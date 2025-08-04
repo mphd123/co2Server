@@ -2,13 +2,14 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "protoOut";
 
+import "google/protobuf/timestamp.proto";
 
 service PlotService {
   rpc GeneratePlot (PlotRequest) returns (PlotResponse);
 }
 
 message PlotRequest {
-  repeated int64 x = 1;
+  repeated google.protobuf.Timestamp x = 1;
   repeated double y = 2;
 }
 

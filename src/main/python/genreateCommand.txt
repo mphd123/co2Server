@@ -1,0 +1,1 @@
+python -m grpc_tools.protoc -I=src/main/resources --python_out=src/main/python/grcp  --grpc_python_out=src/main/python/grcp src/main/resources/image.proto

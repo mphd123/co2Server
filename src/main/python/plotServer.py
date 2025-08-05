@@ -1,6 +1,10 @@
+import matplotlib
+
+matplotlib.use('Agg')
+
 import grpc
 from concurrent import futures
-from grcp import image_pb2, image_pb2_grpc
+import image_pb2, image_pb2_grpc
 import matplotlib.pyplot as plt
 import numpy as np
 import io
@@ -13,7 +17,10 @@ args = parser.parse_args()
 
 port = args.port
 acceptedAddresses = '127.0.0.1' #  use [::] for all interfaces
-print(f"Starting server on port {port}")
+
+
+
+print(f"[Python] Starting server on port {port}")
 
 
 class PlotServiceServicer(image_pb2_grpc.PlotServiceServicer):
@@ -36,6 +43,7 @@ class PlotServiceServicer(image_pb2_grpc.PlotServiceServicer):
         plt.close(fig)
         buf.seek(0)
         image_bytes = buf.read()
+        print(f"[Python] Generated image bytes size: {len(image_bytes)}")
 
         return image_pb2.PlotResponse(image=image_bytes)
 

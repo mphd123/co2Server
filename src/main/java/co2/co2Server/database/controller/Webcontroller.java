@@ -3,11 +3,7 @@ package co2.co2Server.database.controller;
 import co2.co2Server.database.Co2Entry;
 import co2.co2Server.database.SensorDataDB;
 
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.data.time.Second;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.springframework.core.io.ClassPathResource;
+import grpcJava.ImageClient;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,29 +11,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtils;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-public class webcontroller {
+public class Webcontroller {
 
     private SensorDataDB db;
+    private static Process pythonServerProcess = null;
+    private static final int port = 50051;
 
-    public webcontroller(SensorDataDB db) {
+
+    public Webcontroller(SensorDataDB db) {
         this.db = db;
     }
 
@@ -69,37 +59,22 @@ public class webcontroller {
     public ResponseEntity<byte[]> getImage() throws Exception {
         List<Co2Entry> entries = db.getEntries();
 
-        TimeSeries series = new TimeSeries("CO₂ Measurements");
+        long[] x = new long[entries.size()];
+        double[] y = new double[entries.size()];
 
-        for (Co2Entry entry : entries) {
-            series.addOrUpdate(new Second(entry.getDate()), entry.getCo2());
+        for (int i = 0; i < entries.size(); i++) {
+            Co2Entry entry = entries.get(i);
+            x[i] = entry.getDate().getTime();
+            y[i] = entry.getCo2();
         }
 
-        TimeSeriesCollection dataset = new TimeSeriesCollection(series);
-
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "CO₂ Measurements Over Time",
-                "Timestamp",
-                "CO₂ (ppm)",
-                dataset
-        );
-
-        DateAxis axis = (DateAxis) chart.getXYPlot().getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd HH:mm"));
-
-        byte[] imageBytes;
-        try (var baos = new java.io.ByteArrayOutputStream()) {
-            ChartUtils.writeChartAsPNG(baos, chart, 4096, 3000);
-            imageBytes = baos.toByteArray();
-        }
+        byte[] imageBytes = ImageClient.getImage("localhost", port, x, y);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);
 
         return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
-
-
 
     @GetMapping("/")
     public String main2() throws Exception {

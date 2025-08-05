@@ -1,6 +1,6 @@
-package grpc;
+package grpcJava;
 
-import com.google.protobuf.ByteString;
+import com.google.protobuf.Timestamp;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -8,14 +8,13 @@ import protoOut.PlotRequest;
 import protoOut.PlotResponse;
 import protoOut.PlotServiceGrpc;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
-public class imageClient {
+public class ImageClient {
 
-    static byte[] getImage(String address, int port, long[] x, double[] y) {
+    public static byte[] getImage(String address, int port, long[] x, double[] y) {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(address, port ).usePlaintext().build();
         PlotServiceGrpc.PlotServiceStub serverStub = PlotServiceGrpc.newStub(channel);
         CountDownLatch latch = new CountDownLatch(1);
@@ -23,12 +22,18 @@ public class imageClient {
 
         PlotRequest.Builder requestBuilder = PlotRequest.newBuilder();
         int i = 0;
-        for (long value : x) {
-            requestBuilder.setX(i,value);
+        for (long millis : x) {
+            long seconds = millis / 1000;
+            int nanos = (int) ((millis % 1000) * 1_000_000);
+            Timestamp ts = Timestamp.newBuilder()
+                    .setSeconds(seconds)
+                    .setNanos(nanos)
+                    .build();
+            requestBuilder.addX(ts);
         }
         i = 0;
         for (double value : y) {
-            requestBuilder.setY(i,value);
+            requestBuilder.addY(value);
         }
         PlotRequest request = requestBuilder.build();
 
@@ -60,7 +65,7 @@ public class imageClient {
         return imageBytes[0];
     };
 
-    static void getImage(long[] x, double[] y) {
+    public static void getImage(long[] x, double[] y) {
         getImage("localhost",8080,x,y);
     }
 

@@ -1,5 +1,6 @@
 package co2.co2Server.database.controller;
 
+import co2.co2Server.PlotPythonServer;
 import co2.co2Server.database.Co2Entry;
 import co2.co2Server.database.SensorDataDB;
 
@@ -24,7 +25,6 @@ public class Webcontroller {
 
     private SensorDataDB db;
     private static Process pythonServerProcess = null;
-    private static final int port = 50051;
 
 
     public Webcontroller(SensorDataDB db) {
@@ -68,7 +68,7 @@ public class Webcontroller {
             y[i] = entry.getCo2();
         }
 
-        byte[] imageBytes = ImageClient.getImage("localhost", port, x, y);
+        byte[] imageBytes = ImageClient.getImage("localhost", PlotPythonServer.port, x, y);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);

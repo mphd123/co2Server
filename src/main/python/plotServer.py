@@ -20,12 +20,12 @@ acceptedAddresses = '127.0.0.1' #  use [::] for all interfaces
 
 
 
-print(f"[Python] Starting server on port {port}")
+print(f"[Python] Starting server on port {port}",flush=True)
 
 
 class PlotServiceServicer(image_pb2_grpc.PlotServiceServicer):
     def GeneratePlot(self, request, context):
-
+        print(f"[Python] got request for plot ",flush=True)
         X = request.x
         Y = request.y
 
@@ -43,7 +43,7 @@ class PlotServiceServicer(image_pb2_grpc.PlotServiceServicer):
         plt.close(fig)
         buf.seek(0)
         image_bytes = buf.read()
-        print(f"[Python] Generated image bytes size: {len(image_bytes)}")
+        print(f"[Python] Generated image bytes size: {len(image_bytes)}",flush=True)
 
         return image_pb2.PlotResponse(image=image_bytes)
 

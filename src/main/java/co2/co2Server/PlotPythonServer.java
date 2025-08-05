@@ -11,14 +11,14 @@ public class PlotPythonServer {
     private static final Logger logger = LoggerFactory.getLogger(PlotPythonServer.class);
 
     private static Process pythonServerProcess = null;
-    private static final int port = 50051;
+    public static final int port = 50051;
 
     @PostConstruct
     public void startOnBoot() {
         try {
             startPythonGrpcServerIfNotRunning();
         } catch (IOException e) {
-            logger.info("Failed to start Python gRPC server on boot:");
+            System.out.println("Failed to start Python gRPC server on boot:");
             e.printStackTrace();
         }
     }
@@ -32,7 +32,7 @@ public class PlotPythonServer {
             builder.directory(pythonScriptDir);
 
             builder.redirectErrorStream(true);
-            logger.info("[Java PlotPythonServer]starting python server");
+            System.out.println("[Java PlotPythonServer]starting python server width command " + String.join(" ", builder.command()) + " in directory  " + builder.directory() );
             pythonServerProcess = builder.start();
 
             new Thread(() -> {
@@ -40,7 +40,7 @@ public class PlotPythonServer {
                         new InputStreamReader(pythonServerProcess.getInputStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        logger.info("[Python gRPC] " + line);
+                        System.out.println(line);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -53,7 +53,7 @@ public class PlotPythonServer {
     public void stopPythonServer() {
         if (pythonServerProcess != null && pythonServerProcess.isAlive()) {
             pythonServerProcess.destroy();
-            logger.info("Python gRPC server stopped.");
+            System.out.println("Python gRPC server stopped.");
         }
     }
 

@@ -25,27 +25,43 @@ print(f"[Python] Starting server on port {port}",flush=True)
 
 class PlotServiceServicer(image_pb2_grpc.PlotServiceServicer):
     def GeneratePlot(self, request, context):
-        print(f"[Python] got request for plot ",flush=True)
-        X = request.x
-        Y = request.y
+        try:
+            print(f"[Python] got request for plot", flush=True)
+            X = [ts.ToDatetime() for ts in request.x]
+            Y = request.y
+            print(f"[Python] received X length: {len(X)}, Y length: {len(Y)}", flush=True)
 
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.plot(X,Y,marker='o', linestyle='-', color='tab:blue')
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Co2')
-        ax.grid(True)
+            fig, ax = plt.subplots(figsize=(8, 4))
+            print("[Python] created figure", flush=True)
 
-        fig.tight_layout()
+            ax.plot(X,Y,marker='o', linestyle='-', color='tab:blue')
+            ax.set_xlabel('Time')
+            ax.set_ylabel('Co2')
+            ax.grid(True)
+            print("[Python] plotted data", flush=True)
 
-        buf = io.BytesIO()
+            fig.tight_layout()
+            print("[Python] adjusted layout", flush=True)
 
-        fig.savefig(buf, format='png')
-        plt.close(fig)
-        buf.seek(0)
-        image_bytes = buf.read()
-        print(f"[Python] Generated image bytes size: {len(image_bytes)}",flush=True)
+            buf = io.BytesIO()
+            fig.savefig(buf, format='png')
+            print("[Python] saved figure to buffer", flush=True)
 
-        return image_pb2.PlotResponse(image=image_bytes)
+            plt.close(fig)
+            print("[Python] closed figure", flush=True)
+
+            buf.seek(0)
+            image_bytes = buf.read()
+            print(f"[Python] Generated image bytes size: {len(image_bytes)}", flush=True)
+
+            return image_pb2.PlotResponse(image=image_bytes)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            context.set_details(f"Exception: {str(e)}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return image_pb2.PlotResponse()  # or raise grpc.RpcError if you prefer
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

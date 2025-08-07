@@ -63,10 +63,17 @@ public class Webcontroller {
     public static final DateFormat df = new SimpleDateFormat("dd-MM-yyyy");
     @GetMapping("/image")
     public ResponseEntity<byte[]> getImage(@RequestParam(name = "dateFrom", defaultValue = "") String dateFrom,@RequestParam(name = "dateTo", defaultValue = "") String dateTo) throws Exception {
+        Timestamp timeFrom;
+        Timestamp timeTo;
         try {
-            Timestamp timeFrom = new Timestamp(df.parse(dateFrom).getTime());
-            Timestamp timeTo = new Timestamp(df.parse(dateTo).getTime());
-
+            timeFrom = new Timestamp(df.parse(dateFrom).getTime());
+            timeTo = new Timestamp(df.parse(dateTo).getTime());
+        } catch (ParseException e) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            String errorMessage = "got error parsing the given dates the Format should be " + df.toString();
+            return new ResponseEntity<>(errorMessage.getBytes(), headers, HttpStatus.BAD_REQUEST);
+        }
         List<Co2Entry> entries = db.getEntries().stream().filter(co2Entry -> {
 
                 if(!dateFrom.isEmpty() && co2Entry.getDate().before(timeFrom)) return  false;
@@ -74,27 +81,16 @@ public class Webcontroller {
                 return true;
 
         }).toList();
-        } catch (ParseException e) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_PNG);
-            String errorMessage = "got error parsing the given dates the Format should be " + df.toString();
-            return new ResponseEntity<>(errorMessage.getBytes(), headers, HttpStatus.BAD_REQUEST);
-        }
-
         long[] x = new long[entries.size()];
         double[] y = new double[entries.size()];
-
         for (int i = 0; i < entries.size(); i++) {
             Co2Entry entry = entries.get(i);
             x[i] = entry.getDate().getTime();
             y[i] = entry.getCo2();
         }
-
         byte[] imageBytes = ImageClient.getImage("localhost", PlotPythonServer.port, x, y);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);
-
         return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
 

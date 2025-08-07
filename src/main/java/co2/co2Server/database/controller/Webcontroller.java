@@ -66,8 +66,8 @@ public class Webcontroller {
         Timestamp timeFrom;
         Timestamp timeTo;
         try {
-            timeFrom = new Timestamp(df.parse(dateFrom).getTime());
-            timeTo = new Timestamp(df.parse(dateTo).getTime());
+            timeFrom = (!dateFrom.isEmpty()) ?  new Timestamp(df.parse(dateFrom).getTime()) : new Timestamp(0);
+            timeTo = (!dateTo.isEmpty()) ?  new Timestamp(df.parse(dateTo).getTime()) : new Timestamp(Long.MAX_VALUE);
         } catch (ParseException e) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.IMAGE_PNG);

@@ -68,7 +68,7 @@ public class Webcontroller {
                 Timestamp timeFrom = new Timestamp(df.parse(dateFrom).getTime());
                 Timestamp timeTo = new Timestamp(df.parse(dateTo).getTime());
                 if(!dateFrom.isEmpty() && co2Entry.getDate().before(timeFrom)) return  false;
-                if(!dateTo.isEmpty() && co2Entry.getDate().after(timeFrom)) return  false;
+                if(!dateTo.isEmpty() && co2Entry.getDate().after(timeTo)) return  false;
                 return true;
             } catch (ParseException e) {
                 HttpHeaders headers = new HttpHeaders();

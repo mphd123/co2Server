@@ -63,20 +63,23 @@ public class Webcontroller {
     public static final DateFormat df = new SimpleDateFormat("dd-MM-yyyy");
     @GetMapping("/image")
     public ResponseEntity<byte[]> getImage(@RequestParam(name = "dateFrom", defaultValue = "") String dateFrom,@RequestParam(name = "dateTo", defaultValue = "") String dateTo) throws Exception {
+        try {
+            Timestamp timeFrom = new Timestamp(df.parse(dateFrom).getTime());
+            Timestamp timeTo = new Timestamp(df.parse(dateTo).getTime());
+
         List<Co2Entry> entries = db.getEntries().stream().filter(co2Entry -> {
-            try {
-                Timestamp timeFrom = new Timestamp(df.parse(dateFrom).getTime());
-                Timestamp timeTo = new Timestamp(df.parse(dateTo).getTime());
+
                 if(!dateFrom.isEmpty() && co2Entry.getDate().before(timeFrom)) return  false;
                 if(!dateTo.isEmpty() && co2Entry.getDate().after(timeTo)) return  false;
                 return true;
-            } catch (ParseException e) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.IMAGE_PNG);
-                String errorMessage = "got error parsing the given dates the Format should be " + df.toString();
-                return new ResponseEntity<>(errorMessage, headers, HttpStatus.OK).hasBody();
-            }
+
         }).toList();
+        } catch (ParseException e) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            String errorMessage = "got error parsing the given dates the Format should be " + df.toString();
+            return new ResponseEntity<>(errorMessage.getBytes(), headers, HttpStatus.BAD_REQUEST);
+        }
 
         long[] x = new long[entries.size()];
         double[] y = new double[entries.size()];

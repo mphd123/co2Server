@@ -16,8 +16,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -54,10 +59,24 @@ public class Webcontroller {
             return "An error occurred while processing the request with count = " + count;
         }
     }
-    
+
+    public static final DateFormat df = new SimpleDateFormat("dd-MM-yyyy");
     @GetMapping("/image")
-    public ResponseEntity<byte[]> getImage() throws Exception {
-        List<Co2Entry> entries = db.getEntries();
+    public ResponseEntity<byte[]> getImage(@RequestParam(name = "dateFrom", defaultValue = "") String dateFrom,@RequestParam(name = "dateTo", defaultValue = "") String dateTo) throws Exception {
+        List<Co2Entry> entries = db.getEntries().stream().filter(co2Entry -> {
+            try {
+                Timestamp timeFrom = new Timestamp(df.parse(dateFrom).getTime());
+                Timestamp timeTo = new Timestamp(df.parse(dateTo).getTime());
+                if(!dateFrom.isEmpty() && co2Entry.getDate().before(timeFrom)) return  false;
+                if(!dateTo.isEmpty() && co2Entry.getDate().after(timeFrom)) return  false;
+                return true;
+            } catch (ParseException e) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.IMAGE_PNG);
+                String errorMessage = "got error parsing the given dates the Format should be " + df.toString();
+                return new ResponseEntity<>(errorMessage, headers, HttpStatus.OK).hasBody();
+            }
+        }).toList();
 
         long[] x = new long[entries.size()];
         double[] y = new double[entries.size()];

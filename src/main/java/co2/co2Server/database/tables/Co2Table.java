@@ -41,6 +41,10 @@ public class Co2Table {
             UPDATE %s SET %s = ? WHERE %s = ?
             """;
 
+    public static final String DELETE_ALL = """
+        DELETE FROM %s
+        """.formatted(TABLE_NAME);
+
     private Co2Table() {
     }
 }

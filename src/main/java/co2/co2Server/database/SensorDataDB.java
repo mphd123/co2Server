@@ -90,6 +90,12 @@ public class SensorDataDB implements AutoCloseable {
         }
     }
 
+    public void removeAll() throws Exception {
+        try (PreparedStatement s = connection.prepareStatement(Co2Table.DELETE_ALL)) {
+            s.executeUpdate();
+        }
+    }
+
 
 
     @Override

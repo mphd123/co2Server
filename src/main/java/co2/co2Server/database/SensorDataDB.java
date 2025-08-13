@@ -3,6 +3,7 @@ package co2.co2Server.database;
 
 
 import co2.co2Server.database.tables.Co2Table;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -15,7 +16,7 @@ public class SensorDataDB implements AutoCloseable {
     private static final String connectionString = "jdbc:sqlite:sensorData.db";
     public final Connection connection;
 
-    public SensorDataDB() throws Exception {
+    public SensorDataDB(@Value("${co2.db.path}") String connectionString) throws Exception {
         try {
             this.connection = DriverManager.getConnection(connectionString);
             createTables();

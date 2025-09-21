@@ -73,18 +73,32 @@ public class SensorDataDB implements AutoCloseable {
 
     public List<Co2Entry> getEntries() throws Exception {
         try (Statement s = connection.createStatement()) {
-            // ResultSet acts like a pointer into the database table.
             final ResultSet results = s.executeQuery(Co2Table.SELECT);
             final List<Co2Entry> entries = new ArrayList<>();
             while (results.next()) {
-                final int productId = results.getInt(Co2Table.Entry_ID);
+                final int dataId = results.getInt(Co2Table.Entry_ID);
                 final int co2 = results.getInt(Co2Table.CO2VALUE);
                 final int temp = results.getInt(Co2Table.Temperature);
                 final String sensorName = results.getString(Co2Table.SensorName);
                 final Timestamp date = results.getTimestamp(Co2Table.DATE_TIME);
-                entries.add(new Co2Entry(productId, co2, temp, sensorName, date));
+                entries.add(new Co2Entry(dataId, co2, temp, sensorName, date));
             }
             return entries;
+        } catch (SQLException e) {
+            throw new Exception("Could not read products", e);
+        }
+    }
+
+    public Co2Entry getMostRecentEntry() throws Exception {
+        try (Statement s = connection.createStatement()) {
+            final ResultSet result = s.executeQuery(Co2Table.SELECTLATEST);
+
+                final int dataId = result.getInt(Co2Table.Entry_ID);
+                final int co2 = result.getInt(Co2Table.CO2VALUE);
+                final int temp = result.getInt(Co2Table.Temperature);
+                final String sensorName = result.getString(Co2Table.SensorName);
+                final Timestamp date = result.getTimestamp(Co2Table.DATE_TIME);
+                return new Co2Entry(dataId, co2, temp, sensorName, date);
         } catch (SQLException e) {
             throw new Exception("Could not read products", e);
         }

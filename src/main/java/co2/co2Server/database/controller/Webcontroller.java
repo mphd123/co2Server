@@ -52,8 +52,8 @@ public class Webcontroller {
     @GetMapping("/co2")
     public String getNLast(@RequestParam(name = "count", defaultValue = "1") int count) {
         try {
+            if (count == 1)  return  db.getMostRecentEntry().toString();
             List<Co2Entry> list = db.getEntries();
-            Collections.sort(list, (Co2Entry obj1, Co2Entry obj2) -> obj1.getDate().compareTo(obj2.getDate()));
             return list.subList(Math.max(list.size() - count, 0), list.size()).toString();
         } catch (Exception e) {
             return "An error occurred while processing the request with count = " + count;

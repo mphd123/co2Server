@@ -35,7 +35,13 @@ public class Co2Table {
 
     public static final String SELECT = """
     SELECT %s, %s, %s, %s, %s FROM %s
-    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, DATE_TIME, TABLE_NAME);
+    Order By %s DESC
+    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, DATE_TIME, TABLE_NAME,DATE_TIME);
+
+    public static final String SELECTLATEST = """
+    SELECT %s, %s, %s, %s, %s FROM %s
+    Where %s = (Select Max(%s) FROM %s)
+    """.formatted(Entry_ID, CO2VALUE, Temperature, SensorName, DATE_TIME, TABLE_NAME,DATE_TIME,DATE_TIME,TABLE_NAME);
 
     public static final String UPDATE_TEMPLATE = """
             UPDATE %s SET %s = ? WHERE %s = ?

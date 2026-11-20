@@ -20,8 +20,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -108,5 +107,30 @@ public class Webcontroller {
         }
 
         return ResponseEntity.accepted().body(entry);
+    }
+
+    @GetMapping("/api/summary")
+    public Map<String, Object> summary() throws Exception {
+        List<Co2Entry> all = db.getEntries();
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (all.isEmpty()) return result;
+
+        Co2Entry latest = Collections.max(all, Comparator.comparingLong(e -> e.getDate().getTime()));
+        long now = System.currentTimeMillis();
+        result.put("latest", latest);
+        result.put("lastHour", average(all, now - 3_600_000L));
+        result.put("lastDay", average(all, now - 86_400_000L));
+        return result;
+    }
+
+    private Map<String, Object> average(List<Co2Entry> all, long since) {
+        List<Co2Entry> part = all.stream()
+                .filter(e -> e.getDate().getTime() >= since)
+                .toList();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("count", part.size());
+        m.put("co2", part.isEmpty() ? null : part.stream().mapToDouble(e -> e.getCo2()).average().getAsDouble());
+        m.put("temperature", part.isEmpty() ? null : part.stream().mapToDouble(e -> e.getTemperature()).average().getAsDouble());
+        return m;
     }
 }

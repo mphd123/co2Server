@@ -94,7 +94,7 @@ public class Webcontroller {
         return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/")
+    @GetMapping("/test")
     public String main2() throws Exception {
             return "test";
     }

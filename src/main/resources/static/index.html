@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CO₂ monitor</title>
+    <style>
+        :root {
+          --bg: #f3f6f4; --surface: #ffffff; --text: #17211c; --muted: #5d6b64;
+          --line: #d5ddd8; --accent: #1f6f55;
+          --good: #1f7a4d; --ok: #a86a00; --bad: #b3261e;
+        }
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --bg: #101613; --surface: #18201c; --text: #e6efe9; --muted: #92a39a;
+            --line: #2a3630; --accent: #5fc19a;
+            --good: #5fc19a; --ok: #e0a63a; --bad: #f0877f;
+          }
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+          font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+        }
+        main { max-width: 860px; margin: 0 auto; }
+        h1 { font-size: 1.3rem; margin: 0 0 4px; }
+        h2 { font-size: 1.05rem; margin: 0 0 12px; }
+        .sub { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
+        .now {
+          background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+          padding: 20px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end;
+        }
+        .big { font-size: 4rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+        .unit { font-size: 1.1rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
+        .status { font-weight: 600; margin-top: 6px; }
+        .temp { font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .label { color: var(--muted); font-size: .85rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; background: var(--surface);
+          border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+        th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+        th { font-weight: 600; color: var(--muted); font-size: .85rem; }
+        tr:last-child td { border-bottom: 0; }
+        section.plot { margin-top: 28px; }
+        .controls { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line);
+          border-radius: 10px; padding: 16px; }
+        .row { display: grid; grid-template-columns: 150px 1fr 70px; gap: 12px; align-items: center; }
+        .row output { text-align: right; font-variant-numeric: tabular-nums; }
+        input[type=range] { width: 100%; accent-color: var(--accent); }
+        .img-wrap { margin-top: 14px; background: var(--surface); border: 1px solid var(--line);
+          border-radius: 10px; padding: 8px; min-height: 120px; text-align: center; }
+        .img-wrap img { max-width: 100%; height: auto; }
+        .msg { color: var(--muted); padding: 40px 12px; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        @media (max-width: 520px) {
+          .row { grid-template-columns: 1fr 60px; }
+          .row label { grid-column: 1 / -1; }
+          .big { font-size: 3.2rem; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>CO₂ monitor</h1>
+    <div class="sub" id="updated">Loading…</div>
+
+    <div class="now">
+        <div>
+            <div class="label">CO₂ now</div>
+            <div><span class="big" id="co2">–</span><span class="unit">ppm</span></div>
+            <div class="status" id="status"></div>
+        </div>
+        <div>
+            <div class="label">Temperature now</div>
+            <div><span class="temp" id="temp">–</span><span class="unit">°C</span></div>
+        </div>
+        <div>
+            <div class="label">Sensor</div>
+            <div id="sensor">–</div>
+        </div>
+    </div>
+
+    <table>
+        <thead><tr><th>Average</th><th>CO₂ (ppm)</th><th>Temperature (°C)</th></tr></thead>
+        <tbody>
+        <tr><td>Last hour</td><td id="h-co2">–</td><td id="h-temp">–</td><</tr>
+        <tr><td>Last 24 hours</td><td id="d-co2">–</td><td id="d-temp">–</td></tr>
+        </tbody>
+    </table>
+
+    <section class="plot">
+        <h2>CO₂ over time</h2>
+        <div class="controls">
+            <div class="row">
+                <label for="from">Start</label>
+                <input type="range" id="from" min="1" max="30" value="7">
+                <output id="fromOut"></output>
+            </div>
+            <div class="row">
+                <label for="to">End</label>
+                <input type="range" id="to" min="0" max="29" value="0">
+                <output id="toOut"></output>
+            </div>
+        </div>
+        <div class="img-wrap" id="imgWrap"><div class="msg">Loading plot…</div></div>
+    </section>
+</main>
+
+<script>
+    const $ = id => document.getElementById(id);
+    const fmt = (v, d = 0) => (v === null || v === undefined) ? "–" : Number(v).toFixed(d);
+
+    function co2Status(ppm) {
+      if (ppm < 800)  return ["Good air", "var(--good)"];
+      if (ppm < 1200) return ["Getting stuffy, consider ventilating", "var(--ok)"];
+      return ["High, ventilate now", "var(--bad)"];
+    }
+
+    async function loadSummary() {
+      try {
+        const res = await fetch("/api/summary");
+        if (!res.ok) throw new Error(res.status);
+        const s = await res.json();
+        if (!s.latest) { $("updated").textContent = "No readings yet."; return; }
+
+        $("co2").textContent = fmt(s.latest.co2);
+        $("temp").textContent = fmt(s.latest.temperature, 1);
+        $("sensor").textContent = s.latest.sensorName || "–";
+        const [text, color] = co2Status(s.latest.co2);
+        $("status").textContent = text;
+        $("status").style.color = color;
+
+        $("h-co2").textContent = fmt(s.lastHour.co2);
+        $("h-temp").textContent = fmt(s.lastHour.temperature, 1);
+        $("h-n").textContent = s.lastHour.count;
+        $("d-co2").textContent = fmt(s.lastDay.co2);
+        $("d-temp").textContent = fmt(s.lastDay.temperature, 1);
+        $("d-n").textContent = s.lastDay.count;
+
+        $("updated").textContent = "Last reading " + new Date(s.latest.date).toLocaleString();
+      } catch (e) {
+        $("updated").textContent = "Could not load data from /api/summary.";
+      }
+    }
+
+    // The /image endpoint takes dates as dd-MM-yyyy, so the plot has day resolution.
+    function daysAgo(n) {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      const p = x => String(x).padStart(2, "0");
+      return `${p(d.getDate())}-${p(d.getMonth() + 1)}-${d.getFullYear()}`;
+    }
+
+    function label(n) { return n === 0 ? "today" : n === 1 ? "1 day ago" : n + " days ago"; }
+
+    function loadPlot() {
+      let from = +$("from").value, to = +$("to").value;
+      if (to >= from) { to = from - 1; $("to").value = to; }
+      $("fromOut").textContent = label(from);
+      $("toOut").textContent = label(to);
+
+      let url = "/image?dateFrom=" + daysAgo(from);
+      if (to > 0) url += "&dateTo=" + daysAgo(to);  // no dateTo means "until now"
+      url += "&_=" + Date.now();
+
+      const img = new Image();
+      img.alt = "CO₂ plot";
+      img.onload = () => { $("imgWrap").replaceChildren(img); };
+      img.onerror = () => { $("imgWrap").innerHTML = '<div class="msg">Could not load the plot.</div>'; };
+      img.src = url;
+    }
+
+    $("from").addEventListener("input", () => {
+      $("fromOut").textContent = label(+$("from").value);
+    });
+    $("to").addEventListener("input", () => {
+      $("toOut").textContent = label(+$("to").value);
+    });
+    $("from").addEventListener("change", loadPlot);
+    $("to").addEventListener("change", loadPlot);
+
+    loadSummary();
+    loadPlot();
+    setInterval(loadSummary, 30000);
+</script>
+</body>
+</html>
